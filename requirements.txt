@@ -3,3 +3,4 @@ requests
 python-dotenv
 PyNaCl
 yt_dlp
+youtube_dl
