@@ -8,6 +8,7 @@ import os
 import requests
 import json
 import random
+# import youtube_d1
 from discord.ext import commands,tasks
 from dotenv import load_dotenv
 
@@ -77,15 +78,16 @@ def delete_recommendedMovie(index):
 
 @client.command( alliases = ['p'], help = 'Play video using key word or url')
 async def play(ctx, ulr: str):
-
-    if not ctx.message.author.voice:
-        await ctx.send("{} is not connected to any voice channel.".format(ctx.message.author.name))
+    try:
+        if not ctx.message.author.voice:
+            await ctx.send("{} is not connected to any voice channel.".format(ctx.message.author.name))
+            return
+        else:
+            voiceChannel = ctx.message.author.voice.channel   
+            await voiceChannel.connect();      
+    except discord.ext.commands.errors.MissingRequiredArgument:
+        await ctx.send("ulr is a required argument that is missing.")
         return
-    else:
-        voiceChannel = ctx.message.author.voice.channel   
-        voiceChannel.connect();      
-    
-
 
 
     
@@ -96,6 +98,10 @@ async def join(ctx):
         await ctx.send("{} is not connected to any voice channel.".format(ctx.message.author.name))
         return
     else:
+        bot = ctx.message.guild.voice_client
+        if bot.is_connected():
+            await bot.disconnect()
+            
         channel = ctx.message.author.voice.channel
     await channel.connect()
 
@@ -103,14 +109,14 @@ async def join(ctx):
 async def leave(ctx):
     bot = ctx.message.guild.voice_client
     if bot.is_connected():
-        await bot.disconnected()
+        await bot.disconnect()
     else:
         await ctx.send('Bot is not in any voice channel.')
 
 @client.command(help = "Pauses bot's action")
 async def pause(ctx):
     bot = ctx.message.guild.voice_client
-    if bot.is_playin():
+    if bot.is_playing():
         await bot.pause()
     else:
         await ctx.send("Bot is not playing anyting right now.")    
