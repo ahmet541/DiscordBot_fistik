@@ -8,8 +8,9 @@ import os
 import requests
 import json
 import random
-import yt_dlp
-# import youtube_d1
+# import yt_dlp
+from youtube_dl import YoutubeDL
+
 from discord.ext import commands,tasks
 from dotenv import load_dotenv
 
@@ -77,6 +78,37 @@ def delete_recommendedMovie(index):
         del starter_recommendedMovies[index]
 
 
+
+@client.command( help = "Play music")
+async def playMusic(ctx, url: str):
+    currentSong = os.path.isfile("song.mp3")
+
+    try: 
+        if currentSong:
+            os.remove("song.mp3")
+    except:
+        await ctx.send("Wait for current music to stop.")
+
+    channel = ctx.message.author.voice.channel
+    voice = discord.utils.get(client.voice_clients, guild = ctx.guild)
+    
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'postprovessors': [{
+            'key': 'FFmpegExtractAudio',
+            'prefferedcodec': 'mp3',
+            'prefferedquality': '192'
+        }],
+    }
+
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.dowload([url])
+    for file in os.listdir("./"):
+        if file.enswith(".mp3"):
+            os.rename(file, "song.mp3")
+    voice.play(discord.FFmpegPCMAudio("song.mp3"))            
+
+
 @client.command( alliases = ['p'], help = 'Play video using key word or url')
 async def play(ctx, ulr: str):
     try:
@@ -86,10 +118,13 @@ async def play(ctx, ulr: str):
             await ctx.send("{} is not connected to any voice channel.".format(ctx.message.author.name))
             return
         else:
-            voiceChannel = ctx.message.author.voice.channel
-            if voice.is_connected():
-                await voice.disconnect()          
-            await voiceChannel.connect();  
+            try:
+                channel = ctx.message.author.voice.channel
+                await channel.connect()
+            except:
+                await voice.disconnect()
+                channel = ctx.message.author.voice.channel
+                await channel.connect() 
                 
     except discord.ext.commands.errors.MissingRequiredArgument:
         await ctx.send("ulr is a required argument that is missing.")
@@ -113,40 +148,43 @@ async def join(ctx):
             channel = ctx.message.author.voice.channel
             await channel.connect()
 
-        await channel.connect()
 
 
 
 @client.command(help = "Tells bot to leave from voice channel")
 async def leave(ctx):
     bot = ctx.message.guild.voice_client
-    if bot.is_connected():
-        await bot.disconnect()
-    else:
+    try:
+        if bot.is_connected():
+            await bot.disconnect()
+    except:
         await ctx.send('Bot is not in any voice channel.')
 
 @client.command(help = "Pauses bot's action")
 async def pause(ctx):
     bot = ctx.message.guild.voice_client
-    if bot.is_playing():
-        await bot.pause()
-    else:
+    try:
+        if bot.is_playing():
+            await bot.pause()
+    except:
         await ctx.send("Bot is not playing anyting right now.")    
 
 @client.command(help = "Resumes bot's action")
 async def resume(ctx):
     bot = ctx.message.guild.voice_client
-    if bot.is_paused():
-        await bot.resume()
-    else:
+    try:
+        if bot.is_paused():
+            await bot.resume()
+    except:
         await ctx.send("Bot should be paused before it to resume. Use '!play' command") 
 
 @client.command(help="Stops the bot")
 async def stop(ctx):
     bot = ctx.message.voice_client
-    if bot.is_playing():
-        await bot.stop()
-    else:
+    try:
+        if bot.is_playing():
+            await bot.stop()
+    except:
         await ctx.send("Bot should be playing before it to stop. Use '!play' command")
 
 
