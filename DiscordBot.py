@@ -8,7 +8,7 @@ import os
 import requests
 import json
 import random
-import pyNaCl
+import PyNaCl
 from discord.ext import commands,tasks
 from dotenv import load_dotenv
 
