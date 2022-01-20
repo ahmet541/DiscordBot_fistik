@@ -86,7 +86,9 @@ async def play(ctx, ulr: str):
             await ctx.send("{} is not connected to any voice channel.".format(ctx.message.author.name))
             return
         else:
-            voiceChannel = discord.utils.get(ctx.guild.voice_channels, guild = ctx.guild)
+            voiceChannel = ctx.message.author.voice.channel
+            if voice.is_connected():
+                await voice.disconnect()          
             await voiceChannel.connect();  
                 
     except discord.ext.commands.errors.MissingRequiredArgument:
@@ -96,7 +98,7 @@ async def play(ctx, ulr: str):
 
     
 
-@client.command(name = 'jo', help = 'Tells bot to join voice channel')
+@client.command(name = 'join', help = 'Tells bot to join voice channel')
 async def join(ctx):
     voice = discord.utils.get(client.voice_clients, guild = ctx.guild)
     if not ctx.message.author.voice:
@@ -151,4 +153,20 @@ client.run(TOKEN)
 
 
 
+
+# @client.command( alliases = ['p'], help = 'Play video using key word or url')
+# async def play(ctx, ulr: str):
+#     try:
+#         voice = discord.utils.get(client.voice_clients, guild = ctx.guild)
+        
+#         if not ctx.message.author.voice:
+#             await ctx.send("{} is not connected to any voice channel.".format(ctx.message.author.name))
+#             return
+#         else:
+#             voiceChannel = discord.utils.get(ctx.guild.voice_channels, guild = ctx.guild)
+#             await voiceChannel.connect();  
+                
+#     except discord.ext.commands.errors.MissingRequiredArgument:
+#         await ctx.send("ulr is a required argument that is missing.")
+#         return
 
