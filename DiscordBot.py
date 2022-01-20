@@ -8,6 +8,7 @@ import os
 import requests
 import json
 import random
+import youtube_d1
 from discord.ext import commands,tasks
 from dotenv import load_dotenv
 
@@ -29,7 +30,10 @@ async def on_ready():
 
 @client.event 
 async def on_message(message):
+    await client.process_commands(message)
+
     msg = message.content
+    
     if message.author == client.user:
         return
     
