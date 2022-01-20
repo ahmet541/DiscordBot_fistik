@@ -87,7 +87,7 @@ async def play(ctx, ulr: str):
 
     
 
-@client.command(help = 'Tells bot to join voice channel')
+@client.command(name = 'join', help = 'Tells bot to join voice channel')
 async def join(ctx):
     if not ctx.message.author.voice:
         await ctx.send("{} is not connected to any voice channel.".format(ctx.message.author.name))
