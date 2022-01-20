@@ -105,10 +105,15 @@ async def join(ctx):
         await ctx.send("{} is not connected to any voice channel.".format(ctx.message.author.name))
         return
     else:
-        if ctx.message.guild.voice_client.is_connected():
+        try:
+            channel = ctx.message.author.voice.channel
+            await channel.connect()
+        except:
             await voice.disconnect()
-        channel = ctx.message.author.voice.channel
-    await channel.connect()
+            channel = ctx.message.author.voice.channel
+            await channel.connect()
+
+        await channel.connect()
 
 
 
