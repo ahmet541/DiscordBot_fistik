@@ -8,9 +8,10 @@ import os
 import requests
 import json
 import random
-# import yt_dlp
-from youtube_dl import YoutubeDL
+import pandas as pd
+import yt_dlp
 
+from youtube_api import YouTubeDataAPI
 from discord.ext import commands,tasks
 from dotenv import load_dotenv
 
@@ -18,7 +19,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('BOT_TOKEN')
-# client = discord.Client()  # delete?
+YT_KEY = os.getenv('API_KEY')
+
+
+yt = YouTubeDataAPI(YT_KEY)
 client = commands.Bot(command_prefix="!")
 
 words_relatedTo_Movies = ["Movie", "Movies", "movie", "movies"]
@@ -61,7 +65,15 @@ async def on_message(message):
         await message.channel.send("Hey! Litte recommendation! You should consider to watch " + random.choice(starter_recommendedMovies))     
 
 
+@client.event
+async def on_voice_state_update(member, before, after):
+    voice_state = member.guild.voice_client
+    if voice_state is None:
+        # Exiting if the bot it's not connected to a voice channel
+        return
 
+    if len(voice_state.channel.members) == 1:
+        await voice_state.disconnect()
 
 def get_quote():
     response = requests.get("https://zenquotes.io/api/random")
@@ -104,7 +116,8 @@ async def play(ctx,url):
     except discord.ClientException:  # Already in channel
         pass
 
-
+    
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     ydl_opts = {
         'format': 'bestaudio/best',
         'postprovessors': [{
@@ -112,6 +125,7 @@ async def play(ctx,url):
             'prefferedcodec': 'mp3',
             'prefferedquality': '192'
         }],
+        'outtmpl': 'songs/song.mp3'
     }
 
     if "www.youtube.com" not in url:  # Search on keywords
@@ -119,9 +133,7 @@ async def play(ctx,url):
         url = "http://www.youtube.com/watch?v=" + searches.iloc[0].video_id
 
     i = url.find("v=") + 2  # Skip v=
-    info = ydl.extract_info(url, download=False)
-    song_id = info.get("id", None)
-    # song_id = url[i:]
+    song_id = url[i:]
     file_path = "songs/{}.mp3".format(song_id)
     if not os.path.exists("songs"):
         os.mkdir("songs")
@@ -129,6 +141,7 @@ async def play(ctx,url):
     if not os.path.exists(file_path):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
+            info = ydl.extract_info(url, download=False)
             title = info.get("title", None)
             os.rename("songs/song.mp3", file_path)
             await ctx.send(f'Now playing {title}!')
@@ -181,38 +194,37 @@ async def join(ctx):
 
 @client.command(help = "Tells bot to leave from voice channel")
 async def leave(ctx):
-    bot = ctx.message.guild.voice_client
-    try:
-        if bot.is_connected():
+    bot = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if bot.is_connected():
             await bot.disconnect()
-    except:
+    else:
         await ctx.send('Bot is not in any voice channel.')
 
 @client.command(help = "Pauses bot's action")
 async def pause(ctx):
-    bot = ctx.message.guild.voice_client
-    try:
-        if bot.is_playing():
+    bot = discord.utils.get(client.voice_clients, guild=ctx.guild)
+
+    if bot.is_playing():
             await bot.pause()
-    except:
+    else:
         await ctx.send("Bot is not playing anyting right now.")    
 
 @client.command(help = "Resumes bot's action")
 async def resume(ctx):
-    bot = ctx.message.guild.voice_client
-    try:
-        if bot.is_paused():
+    bot = discord.utils.get(client.voice_clients, guild=ctx.guild)
+   
+    if bot.is_paused():
             await bot.resume()
-    except:
+    else:
         await ctx.send("Bot should be paused before it to resume. Use '!play' command") 
 
 @client.command(help="Stops the bot")
 async def stop(ctx):
-    bot = ctx.message.voice_client
-    try:
-        if bot.is_playing():
+    bot = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    
+    if bot.is_playing():
             await bot.stop()
-    except:
+    else:
         await ctx.send("Bot should be playing before it to stop. Use '!play' command")
 
 
