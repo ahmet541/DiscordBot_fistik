@@ -4,4 +4,4 @@ python-dotenv
 PyNaCl
 yt_dlp
 pandas
-youtube_api
+youtube-data-api
