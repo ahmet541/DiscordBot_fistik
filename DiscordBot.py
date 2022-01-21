@@ -91,7 +91,7 @@ def delete_recommendedMovie(index):
 
 
 @client.command( allias = ['p'], help = "Play Music")
-async def play(ctx,url):
+async def play(ctx,*,url: str):
 
     if len(url) == 1:
         url = url[0]
