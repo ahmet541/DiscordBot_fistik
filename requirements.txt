@@ -2,5 +2,6 @@ discord.py
 requests
 python-dotenv
 PyNaCl
-youtube_dl
+yt_dlp
 pandas
+youtube_api
