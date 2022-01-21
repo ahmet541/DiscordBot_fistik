@@ -78,20 +78,33 @@ def delete_recommendedMovie(index):
         del starter_recommendedMovies[index]
 
 
+@client.command( allias = ['p'], help = "Play Music")
+async def play(ctx,url):
 
-@client.command( help = "Play music")
-async def playMusic(ctx, url: str):
-    currentSong = os.path.isfile("song.mp3")
+    if len(url) == 1:
+        url = url[0]
 
-    try: 
-        if currentSong:
-            os.remove("song.mp3")
-    except:
-        await ctx.send("Wait for current music to stop.")
+    try:
+        if os.path.exists("songs"):
+            files = os.listdir("songs")
+            if len(files) > 20:
+                os.remove(files[0])
+    except PermissionError:
+        await ctx.send("Wait for the current playing \
+            music to end or use the 'stop' command.")
+        return
 
-    channel = ctx.message.author.voice.channel
-    voice = discord.utils.get(client.voice_clients, guild = ctx.guild)
-    
+    if not ctx.message.author.voice:
+        await ctx.send("You are not connected to a voice channel.")
+    else:
+        voice_chan = ctx.message.author.voice.channel
+
+    try:
+        await voice_chan.connect()
+    except discord.ClientException:  # Already in channel
+        pass
+
+
     ydl_opts = {
         'format': 'bestaudio/best',
         'postprovessors': [{
@@ -101,34 +114,49 @@ async def playMusic(ctx, url: str):
         }],
     }
 
-    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        ydl.dowload([url])
-    for file in os.listdir("./"):
-        if file.enswith(".mp3"):
-            os.rename(file, "song.mp3")
-    voice.play(discord.FFmpegPCMAudio("song.mp3"))            
+    if "www.youtube.com" not in url:  # Search on keywords
+        searches = pd.DataFrame(yt.search( q=url, max_results=10, type='video', videoCategoryId='10'))
+        url = "http://www.youtube.com/watch?v=" + searches.iloc[0].video_id
+
+    i = url.find("v=") + 2  # Skip v=
+    info = ydl.extract_info(url, download=False)
+    song_id = info.get("id", None)
+    # song_id = url[i:]
+    file_path = "songs/{}.mp3".format(song_id)
+    if not os.path.exists("songs"):
+        os.mkdir("songs")
+
+    if not os.path.exists(file_path):
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+            title = info.get("title", None)
+            os.rename("songs/song.mp3", file_path)
+            await ctx.send(f'Now playing {title}!')
+
+    voice.play(discord.FFmpegPCMAudio(file_path))
 
 
-@client.command( alliases = ['p'], help = 'Play video using key word or url')
-async def play(ctx, ulr: str):
-    try:
-        voice = discord.utils.get(client.voice_clients, guild = ctx.guild)
+
+# @client.command( alliases = ['p'], help = 'Play video using key word or url')
+# async def play(ctx, ulr: str):
+#     try:
+#         voice = discord.utils.get(client.voice_clients, guild = ctx.guild)
         
-        if not ctx.message.author.voice:
-            await ctx.send("{} is not connected to any voice channel.".format(ctx.message.author.name))
-            return
-        else:
-            try:
-                channel = ctx.message.author.voice.channel
-                await channel.connect()
-            except:
-                await voice.disconnect()
-                channel = ctx.message.author.voice.channel
-                await channel.connect() 
+#         if not ctx.message.author.voice:
+#             await ctx.send("{} is not connected to any voice channel.".format(ctx.message.author.name))
+#             return
+#         else:
+#             try:
+#                 channel = ctx.message.author.voice.channel
+#                 await channel.connect()
+#             except:
+#                 await voice.disconnect()
+#                 channel = ctx.message.author.voice.channel
+#                 await channel.connect() 
                 
-    except discord.ext.commands.errors.MissingRequiredArgument:
-        await ctx.send("ulr is a required argument that is missing.")
-        return
+#     except discord.ext.commands.errors.MissingRequiredArgument:
+#         await ctx.send("ulr is a required argument that is missing.")
+#         return
 
 
     
