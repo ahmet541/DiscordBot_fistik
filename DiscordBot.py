@@ -72,14 +72,12 @@ async def on_message(message):
 @client.event
 async def on_voice_state_update(member, before, after):
     voice_state = member.guild.voice_client
-    # await check_queue(member.guild)
-    # print ("check")
     if voice_state is None:
         # Exiting if the bot it's not connected to a voice channel
         return
 
     if len(voice_state.channel.members) == 1:
-        if member.guild.id in queues:
+        if member.guild.id in queues: # if nobody is in roome, clear queues
             del queues[member.guild.id]
         await voice_state.disconnect()
 
@@ -99,25 +97,23 @@ async def delete_recommendedMovie(index):
     if index < len(starter_recommendedMovies):
         del starter_recommendedMovies[index]
 
-# @client.command( allias = ['p'], help = "Play Music")
-# async def play(ctx,*,url: str):
-#     play2(ctx,url)
 
-@tasks.loop(seconds=1)
+
+@tasks.loop(seconds=1) # method that checks whether bot stop playing video or not. If it stopped playing and there is video in queus then play the next video
 async def start_check_constantly():
     for i in queues:
         await check_queue(client.get_guild(i))
 
 
 @client.command( aliases = ['p'], help = "Play Music")
-async def play(ctx,*,url): # the function that add music to queue, and calls chech_queue() which calls play2 function
+async def play(ctx,*,url): # the function that add music to queue
     if len(url) == 1:
         url = url[0]
 
     try:
         if os.path.exists("songs"):
             files = os.listdir("songs")
-            if len(files) > 3:
+            if len(files) > 3: # if there is more than 3 dowloaded music, delete first one. It is required since we do not have unlimited space to storage .mp3 files in server
                 os.remove("songs/{}".format(files[0]))
     except PermissionError:
         return
@@ -148,18 +144,13 @@ async def check_queue(cur_guild):
     bot = discord.utils.get(client.voice_clients, guild=cur_guild)
 
     if not bot.is_playing():
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=f'music | help!'))    
         if id in queues:
             if len(queues[id]) != 0:
                 current_url = queues[id].pop(0)
                 await play2(cur_guild,current_url)    
-            # else:  # add later to clear list if queue finished
-            #     if os.path.exists("songs"):
-            #         files = os.listdir("songs")
-            #         if len(files) > 3:
-            #             os.remove("songs/{}".format(files[0]))
+  
 
-
-# @client.command( allias = ['p'], help = "Play Music")
 async def play2(cur_guild,url): #the function that plays music
 
     voice = discord.utils.get(client.voice_clients, guild=cur_guild)
@@ -192,10 +183,6 @@ async def play2(cur_guild,url): #the function that plays music
             os.rename("songs/song.mp3", file_path)
             await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=f'Now playing {title}!'))
     voice.play(discord.FFmpegPCMAudio(file_path))
-    # await asyncio.sleep(duration + 2)
-    # os.remove(file_path)
-    # await check_queue(cur_guild,cur_guild.id)
-
 
 
     
@@ -252,6 +239,7 @@ async def stop(ctx):
             bot.stop()
             if ctx.message.guild.id in queues:
                 del queues[ctx.message.guild.id]
+            await client.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=f'music | help!'))    
     else:
         await ctx.send("Bot should be playing before it to stop. Use '!play' command")
 
@@ -268,21 +256,4 @@ async def skip(ctx):
 client.run(TOKEN)
 
 
-
-
-# @client.command( alliases = ['p'], help = 'Play video using key word or url')
-# async def play(ctx, ulr: str):
-#     try:
-#         voice = discord.utils.get(client.voice_clients, guild = ctx.guild)
-        
-#         if not ctx.message.author.voice:
-#             await ctx.send("{} is not connected to any voice channel.".format(ctx.message.author.name))
-#             return
-#         else:
-#             voiceChannel = discord.utils.get(ctx.guild.voice_channels, guild = ctx.guild)
-#             await voiceChannel.connect();  
-                
-#     except discord.ext.commands.errors.MissingRequiredArgument:
-#         await ctx.send("ulr is a required argument that is missing.")
-#         return
 
