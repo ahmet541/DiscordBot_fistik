@@ -51,7 +51,7 @@ async def on_message(message):
         await message.channel.send('Hello {}! Have fun!'.format(message.author))
         
     if msg.startswith("inspire me"):
-        newQuote = get_quote()
+        newQuote = await get_quote()
         await message.channel.send(newQuote)
 
     if msg.startswith("$addMovie"):
