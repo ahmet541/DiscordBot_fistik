@@ -2,7 +2,7 @@
 
 
 
-It is basic discord bot that can response some simple comments, and play video from youtube. User can add multiple links or videos to queue using "!play xxx" command.
+It is basic discord bot that can response some simple comments, and play video from youtube. User can add multiple links or videos to queue using "!play xxx" command. Use "!help" to see all commands.
 
 Good or bad?
 - It should dowload every video, when it's their turn
