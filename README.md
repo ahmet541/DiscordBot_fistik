@@ -8,7 +8,7 @@ Good or bad?
 - It should dowload every video, when it's their turn
 - I did not try to play video simultaneous in multiple servers. That may not work
 - It does not work with playlist.
-
+- After working for hours, its functioning is impaired.
 
 + It dowloads fast so users do not wait long times( 2 sec to dowload 4mb ".mp3" file
 + After dowloading 3 videos in "mp3" format it deletes first one and dowloads new ones so it requires less storage
